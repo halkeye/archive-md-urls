@@ -48,5 +48,5 @@ def update_md_source(md_source: str, wayback_urls: dict[str, Optional[str]]) -> 
         if snapshot:
             # Only replace strings which are == url if they are preceded and
             # followed by braces to avoid mismatches
-            md_source = re.sub(rf"(?<=\(){url}(?=\))", snapshot, md_source)
+            md_source = re.sub(rf"(?<=\(){re.escape(url)}(?=\))", snapshot, md_source)
     return md_source
