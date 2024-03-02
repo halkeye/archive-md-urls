@@ -3,6 +3,8 @@
 from pathlib import Path
 from typing import Optional
 
+from urllib.parse import urlparse
+import frontmatter
 import dateutil.parser
 import markdown
 from bs4 import BeautifulSoup
@@ -83,10 +85,11 @@ def convert_markdown(md_source: str) -> tuple[str, Optional[str]]:
         tuple[str, dict[str, Optional[str]]: HTML version of Markdown file and date from
                                              Markdown metadata
     """
-    md: markdown.core.Markdown = markdown.Markdown(extensions=["meta"])
-    html: str = md.convert(md_source)
+    md: markdown.core.Markdown = markdown.Markdown()
+    post = frontmatter.loads(md_source)
+    html: str = md.convert(post.content)
     try:
-        date: Optional[str] = md.Meta["date"][0]
+        date: Optional[str] = str(post["date"])
     except KeyError:
         date = None
     return html, date
@@ -130,7 +133,7 @@ def filter_urls(md_urls: list[str]) -> list[str]:
     urls: list[str] = list(set(md_urls))
     # Filter out stable URLs
     return [
-        url for url in urls if not any(stable_url in url for stable_url in STABLE_URLS)
+        url for url in urls if is_absolute(url) and not any(stable_url in url for stable_url in STABLE_URLS)
     ]
 
 
@@ -145,3 +148,14 @@ def get_urls(html: str) -> list[str]:
     """
     soup = BeautifulSoup(html, "html.parser")
     return [a.get("href") for a in soup.find_all("a", href=True)]
+
+def is_absolute(url: str) -> bool:
+    """Checks if a url is absolute or not
+
+    Args:
+        url (str): url
+
+    Returns:
+        bool: true if absolute if not false
+    """
+    return bool(urlparse(url).netloc)

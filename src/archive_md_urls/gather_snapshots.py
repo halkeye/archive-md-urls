@@ -8,6 +8,7 @@ snapshot. If no snapshot available, return None.
 
 import asyncio
 import sys
+import re
 from typing import Any, Optional
 
 import httpx
@@ -72,7 +73,7 @@ def get_closest(api_response: dict[str, Any]) -> Optional[str]:
     """
     if not api_response["archived_snapshots"]:
         return None
-    return api_response["archived_snapshots"]["closest"]["url"]
+    return re.sub(r'^http\:\/\/web.archive.org/', 'https://web.archive.org/', api_response["archived_snapshots"]["closest"]["url"])
 
 
 async def gather_snapshots(
